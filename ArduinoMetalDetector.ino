@@ -31,7 +31,7 @@
 
 // Pin definitions
 #define SENSITIVITY_POT_APIN 1
-#define SPEAKER_PIN 2
+#define SPEAKER_PIN 10
 
 unsigned long lastSignalTime = 0;
 long signalTimeDelta = 0;
