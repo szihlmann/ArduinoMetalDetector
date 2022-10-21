@@ -30,7 +30,6 @@
 #define BASE_TONE_FREQUENCY 280
 
 // Pin definitions
-#define SENSITIVITY_POT_APIN 1
 #define SPEAKER_PIN 10
 
 unsigned long lastSignalTime = 0;
@@ -80,7 +79,7 @@ void setup()
 
 void loop()
 {
-  float sensitivity = mapFloat(analogRead(SENSITIVITY_POT_APIN), 0, 1023, 0.5, 10.0);
+  float sensitivity = mapFloat(100, 0, 1023, 0.5, 10.0);
   int storedTimeDeltaDifference = storedTimeDelta - signalTimeDelta;
   unsigned int toneFrequency = BASE_TONE_FREQUENCY + abs(storedTimeDeltaDifference) * sensitivity;
   tone(SPEAKER_PIN, toneFrequency);
