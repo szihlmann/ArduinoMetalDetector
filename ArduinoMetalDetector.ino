@@ -21,37 +21,44 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#include "src/Buzzer/Buzzer.h"
 
 // Number of cycles from external counter needed to generate a signal event
 // Larger number: Better resolution and longer aquisition time. Max value 65535 (16 bit)
 #define CYCLES_PER_SIGNAL 5000
 
-// Base tone frequency (speaker)
-#define BASE_TONE_FREQUENCY 280
+// Show that TIMER1_COMPA_vect has recently fired and new data is available
+// newData will increment at every interrupt to allow a delay at startup 
+volatile uint8_t newData = 0;
 
 // Pin definitions
 #define SPEAKER_PIN 10
+#define LED_PIN 11
 
 unsigned long lastSignalTime = 0;
 long signalTimeDelta = 0;
 long storedTimeDelta = 0;
 
+// Create buzzer instance
+Buzzer buzzer = Buzzer(SPEAKER_PIN, LED_PIN);
+
 void setup()
 {
   setup_timer1();
-  pinMode(SPEAKER_PIN, OUTPUT);
+  while (newData < 10); // Wait to assign a stable value
+  storedTimeDelta = signalTimeDelta;
 }
 
 void loop()
 {
-  float sensitivity = mapFloat(100, 0, 1023, 0.5, 10.0);
-  int storedTimeDeltaDifference = storedTimeDelta - signalTimeDelta;
-  unsigned int toneFrequency = BASE_TONE_FREQUENCY + abs(storedTimeDeltaDifference) * sensitivity;
-  tone(SPEAKER_PIN, toneFrequency);
-}
-
-float mapFloat(int input, int inMin, int inMax, float outMin, float outMax)
-{
-  float scale = (float)(input - inMin) / (inMax - inMin);
-  return ((outMax - outMin) * scale) + outMin;
+  unsigned long cTime = millis();
+  
+  if (newData){
+    newData = 0;
+    // Calculate difference in signal time
+    long TimeDelta = (long)(storedTimeDelta) - (long)(signalTimeDelta);
+    buzzer.update(TimeDelta); 
+  }
+  buzzer.tick(cTime);
 }

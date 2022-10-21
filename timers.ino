@@ -5,11 +5,10 @@ SIGNAL(TIMER1_COMPA_vect)
   unsigned long currentTime = micros();
   signalTimeDelta =  currentTime - lastSignalTime;
   lastSignalTime = currentTime;
+  uint8_t dataAvailable = newData;
 
-  if (storedTimeDelta == 0)
-  {
-    storedTimeDelta = signalTimeDelta;
-  }
+  dataAvailable++;
+  newData = dataAvailable;
 
   // Move OCR1A value ahead
   OCR1A += CYCLES_PER_SIGNAL;
