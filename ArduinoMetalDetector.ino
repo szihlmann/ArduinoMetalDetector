@@ -29,9 +29,6 @@
 // Base tone frequency (speaker)
 #define BASE_TONE_FREQUENCY 280
 
-// Frequency delta threshold for fancy spinner to trigger
-#define SPINNER_THRESHOLD 700
-
 // Pin definitions
 #define SENSITIVITY_POT_APIN 1
 #define SPEAKER_PIN 2
@@ -96,14 +93,6 @@ void loop()
     unsigned int toneFrequency = BASE_TONE_FREQUENCY + abs(storedTimeDeltaDifference) * sensitivity;
     tone(SPEAKER_PIN, toneFrequency);
 
-    if (storedTimeDeltaDifference > SPINNER_THRESHOLD)
-    {
-      digitalWrite(SPINNER_PIN, HIGH);
-    }
-    else
-    {
-      digitalWrite(SPINNER_PIN, LOW);
-    }
   }
   else
   {
