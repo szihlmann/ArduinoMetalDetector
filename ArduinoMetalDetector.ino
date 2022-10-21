@@ -32,7 +32,6 @@
 // Pin definitions
 #define SENSITIVITY_POT_APIN 1
 #define SPEAKER_PIN 2
-#define RESET_BTN_PIN 12
 
 unsigned long lastSignalTime = 0;
 long signalTimeDelta = 0;
@@ -77,9 +76,6 @@ void setup()
   TIMSK1 |= (1 << OCIE1A);
 
   pinMode(SPEAKER_PIN, OUTPUT);
-  pinMode(SPINNER_PIN, OUTPUT);
-  pinMode(TRIGGER_BTN_PIN, INPUT_PULLUP);
-  pinMode(RESET_BTN_PIN, INPUT_PULLUP);
 }
 
 void loop()
@@ -88,10 +84,6 @@ void loop()
   int storedTimeDeltaDifference = storedTimeDelta - signalTimeDelta;
   unsigned int toneFrequency = BASE_TONE_FREQUENCY + abs(storedTimeDeltaDifference) * sensitivity;
   tone(SPEAKER_PIN, toneFrequency);
-  if (digitalRead(RESET_BTN_PIN) == LOW)
-  {
-    storedTimeDelta = 0;
-  }
 }
 
 float mapFloat(int input, int inMin, int inMax, float outMin, float outMax)
