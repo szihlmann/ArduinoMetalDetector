@@ -23,6 +23,7 @@
  */
  
 #include "src/Buzzer/Buzzer.h"
+#include "src/BaselineCorrection/BaselineCorrection.h"
 
 // Number of cycles from external counter needed to generate a signal event
 // Larger number: Better resolution and longer aquisition time. Max value 65535 (16 bit)
@@ -38,16 +39,18 @@ volatile uint8_t newData = 0;
 
 unsigned long lastSignalTime = 0;
 long signalTimeDelta = 0;
-long storedTimeDelta = 0;
 
 // Create buzzer instance
 Buzzer buzzer = Buzzer(SPEAKER_PIN, LED_PIN);
+
+// Create baseline correction engine
+BaselineCorrection baseline = BaselineCorrection();
 
 void setup()
 {
   setup_timer1();
   while (newData < 10); // Wait to assign a stable value
-  storedTimeDelta = signalTimeDelta;
+  baseline.initialize(signalTimeDelta, millis());
 }
 
 void loop()
@@ -56,9 +59,13 @@ void loop()
   
   if (newData){
     newData = 0;
+    
     // Calculate difference in signal time
-    long TimeDelta = (long)(storedTimeDelta) - (long)(signalTimeDelta);
+    long TimeDelta = (long)(baseline.getValue()) - (long)(signalTimeDelta);
     buzzer.update(TimeDelta); 
+
+    // Update baseline
+    baseline.update(signalTimeDelta, cTime); 
   }
   buzzer.tick(cTime);
 }
