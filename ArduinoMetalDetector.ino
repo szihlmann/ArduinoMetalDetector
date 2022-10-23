@@ -39,9 +39,9 @@ volatile uint8_t newData = 0; // Incremented whenever aquisition cycle finished
 
 // Timer 1 - The Clock
 volatile unsigned long timer1_micros = 0;
+volatile uint8_t TCNT1_overflowCount = 0;
 
 // Buffer for total elapsed time when measuring colpitts frequency
-unsigned long lastSignalTime = 0;
 long signalTimeDelta = 0;
 
 // Create buzzer instance

@@ -7,21 +7,42 @@
  */
 SIGNAL(TIMER0_COMPB_vect)
 {
-  uint8_t dataAvailable = newData;
-  unsigned long currentTime = Micros();
-
-  TCNT0_overflowCount++; // Increment overflow counter
+  uint16_t inputCapture = ICR1; // Read most recent Input Capture of timer 1
+  uint8_t TCNT0_buf = TCNT0; // Read current timer0 counter
+  uint8_t timer_overflows = TCNT1_overflowCount; // Read timer 1 overflows
   
+  static uint16_t previousInputCapture = 0;
+  static boolean skipCycle = false;
+  uint32_t elapsedTime;
+  uint8_t dataAvailable = newData;
+  
+  TCNT0_overflowCount++; // Increment clock counter
+
   if (TCNT0_overflowCount < SIGNAL_CYCLES)
     return; // End interrupt here
-  
-  signalTimeDelta =  currentTime - lastSignalTime;
-  lastSignalTime = currentTime;
-  dataAvailable++;
-  newData = dataAvailable;
+
+  // Calculate total elapsed time using input capture
+  // Ensure we didn't miss a colpitts-tick before we had the chance to read ICR1. 
+  if (TCNT0_buf == 1){
+    if (!skipCycle) // If last reading was erroneous, we need to skip one cycle.
+    {
+      elapsedTime = ((unsigned long) timer_overflows << 16) + inputCapture;
+      elapsedTime -= previousInputCapture;
+      signalTimeDelta = elapsedTime;
+      dataAvailable++;
+      newData = dataAvailable;
+    }
+    skipCycle = false;   
+  }
+  else
+  {
+    skipCycle = true; // Skip also next result because it's probably erroneous
+  }
 
   // Prepare for next measurement
+  previousInputCapture = inputCapture;
   TCNT0_overflowCount = 0;
+  TCNT1_overflowCount = 0;  
 }
 
 /* The CLOCK - ISR routine
@@ -30,9 +51,15 @@ SIGNAL(TIMER0_COMPB_vect)
  */
 ISR(TIMER1_OVF_vect)
 {
+  // For Micros()
   unsigned long a = timer1_micros;
   a += 4096; // 4096 microseconds per timer1 overflow (2^16 / 16 MHz)
-  timer1_micros = a; 
+  timer1_micros = a;
+
+  // For high precision readout using input capture
+  uint8_t b = TCNT1_overflowCount;
+  b++; // Increment clock counter
+  TCNT1_overflowCount = b;
 }
 
 void setup_timer0()
@@ -61,10 +88,11 @@ void setup_timer1()
   /* Timer to generate a precise clock with 16 MHz on 16-bit counter
    * Setup timer 1 for 16 MHz clock source (prescaler = 1, CS10)
    * Activate input noise canceller (ICNC1)
+   * Input capture on rising edge (ICES1) on Pin ICP1 (Arduino Micro D4)
    * Set WGM(Waveform Generation Mode) to 0 (Normal)
    */
   TCCR1A = 0x0;
-  TCCR1B  = (1 << CS10) | (1 << ICES1);
+  TCCR1B  = (1 << CS10) | (1 << ICNC1) | (1 << ICES1);
   TCCR1C = 0x0;
 
   // Reset counter and start measuring time
