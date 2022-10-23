@@ -29,13 +29,16 @@
 // Larger number: Better resolution and longer aquisition time. Max value 255 (8 bit)
 #define SIGNAL_CYCLES 5 // Multiplies by 512 (=2'560 cycles)
 
-// Timer 0 - Colpitts counter
-volatile uint8_t TCNT0_OverflowCount = 0; // Incremented at every overflow of TIMER0_COMPB
-volatile uint8_t newData = 0; // Incremented whenever aquisition cycle finished
-
 // Pin definitions
 #define SPEAKER_PIN 10
 #define LED_PIN 11
+
+// Timer 0 - Colpitts counter
+volatile uint8_t TCNT0_overflowCount = 0; // Incremented at every overflow of TIMER0_COMPB
+volatile uint8_t newData = 0; // Incremented whenever aquisition cycle finished
+
+// Timer 1 - The Clock
+volatile unsigned long timer1_micros = 0;
 
 // Buffer for total elapsed time when measuring colpitts frequency
 unsigned long lastSignalTime = 0;
@@ -50,13 +53,14 @@ BaselineCorrection baseline = BaselineCorrection();
 void setup()
 {
   setup_timer0();
+  setup_timer1();
   while (newData < 10); // Wait to assign a stable value
-  baseline.initialize(signalTimeDelta, millis());
+  baseline.initialize(signalTimeDelta, Millis());
 }
 
 void loop()
 {
-  unsigned long cTime = millis();
+  unsigned long cTime = Millis();
   
   if (newData){
     newData = 0;
