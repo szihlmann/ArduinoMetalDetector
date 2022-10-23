@@ -20,7 +20,7 @@ void setup_timer1()
   // Timer runs from 0x00 to 0xFFFF and overruns
   TCCR1A = 0b00000000;
   
-  // Set CSS(Clock Speed Selection) to 0b111 (External clock source on T0 pin
+  // Set CSS(Clock Speed Selection) to 0b111 (External clock source on T1 pin
   // (ie, pin 5 on UNO). Clock on rising edge.)
   TCCR1B = 0b00000111;
   
