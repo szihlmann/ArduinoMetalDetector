@@ -26,17 +26,18 @@
 #include "src/BaselineCorrection/BaselineCorrection.h"
 
 // Number of cycles from external counter needed to generate a signal event
-// Larger number: Better resolution and longer aquisition time. Max value 65535 (16 bit)
-#define CYCLES_PER_SIGNAL 5000
+// Larger number: Better resolution and longer aquisition time. Max value 255 (8 bit)
+#define SIGNAL_CYCLES 5 // Multiplies by 512 (=2'560 cycles)
 
-// Show that TIMER1_COMPA_vect has recently fired and new data is available
-// newData will increment at every interrupt to allow a delay at startup 
-volatile uint8_t newData = 0;
+// Timer 0 - Colpitts counter
+volatile uint8_t TCNT0_OverflowCount = 0; // Incremented at every overflow of TIMER0_COMPB
+volatile uint8_t newData = 0; // Incremented whenever aquisition cycle finished
 
 // Pin definitions
 #define SPEAKER_PIN 10
 #define LED_PIN 11
 
+// Buffer for total elapsed time when measuring colpitts frequency
 unsigned long lastSignalTime = 0;
 long signalTimeDelta = 0;
 
@@ -48,7 +49,7 @@ BaselineCorrection baseline = BaselineCorrection();
 
 void setup()
 {
-  setup_timer1();
+  setup_timer0();
   while (newData < 10); // Wait to assign a stable value
   baseline.initialize(signalTimeDelta, millis());
 }

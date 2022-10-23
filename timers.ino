@@ -1,37 +1,46 @@
-// This signal is called when the timer value TCNT1 reaches OCR1A
-// (Note: TCNT1 is incremented on every external clock cycle)
-SIGNAL(TIMER1_COMPA_vect)
+/* The colpitts - ISR routine
+ * Counter for colpitt oscillator cycles
+ * TCNT0 is incremented on every external clock cycle
+ * Interrupt is executed whenever Timer0 reaches TOP, reverts
+ * and reaches BOTTOM again,
+ * i.e. after 0x1FF + 1 = 512 clock cycles (~every 3.66 ms)
+ */
+SIGNAL(TIMER0_COMPB_vect)
 {
+  uint8_t dataAvailable = newData;
   unsigned long currentTime = micros();
+
+  TCNT0_OverflowCount++; // Increment overflow counter
+  
+  if (TCNT0_OverflowCount < SIGNAL_CYCLES)
+    return; // End interrupt here
+  
   signalTimeDelta =  currentTime - lastSignalTime;
   lastSignalTime = currentTime;
-  uint8_t dataAvailable = newData;
-
   dataAvailable++;
   newData = dataAvailable;
 
-  // Move OCR1A value ahead
-  OCR1A += CYCLES_PER_SIGNAL;
+  // Prepare for next measurement
+  TCNT0_OverflowCount = 0;
 }
 
-void setup_timer1()
+void setup_timer0()
 {
-  // Set WGM(Waveform Generation Mode) to 0 (Normal)
-  // Timer runs from 0x00 to 0xFFFF and overruns
-  TCCR1A = 0b00000000;
+  // Warning: This timer 0 override deactivates arduino-native millis() / micros() functionality!
   
-  // Set CSS(Clock Speed Selection) to 0b111 (External clock source on T1 pin
-  // (ie, pin 5 on UNO). Clock on rising edge.)
-  TCCR1B = 0b00000111;
+  // Used to count cycles of Colpitts oscillator on 8-bit timer (extended to 9 bits = 512)
+  // Select external clock on T0-pin (Arduino Micro D6), clock on rising edge
+  TCCR0A = (1 << WGM00); // (WGM00, Phase correct PWM mode --> This adds 1 bit resolution)
+  TCCR0B = (1 << CS00) | (1 << CS01) | (1 << CS02);
   
-  // Reset counter and start measuring time
-  TCNT1 = 0;
-  OCR1A = CYCLES_PER_SIGNAL;
-  lastSignalTime = micros();
+  // Reset counter
+  TCNT0 = 0;
   
-  // Clear interrupt flag by setting OCF1A high
-  TIFR1 |= (1 << OCF1A);
-  
-  // Enable timer compare interrupt A (ie, SIGNAL(TIMER1_COMPA_VECT))
-  TIMSK1 |= (1 << OCIE1A);
+  // Clear interrupt flags by setting TOV0 high
+  TIFR0 = (1 << OCF0B); 
+
+  // Enable timer Output Compare Match B Interrup (ie, ISR(TIMER0_COMPB_vect))
+  // Overflows every ~3.66 ms with 140 kHz input
+  TIMSK0 = (1 << OCIE0B);
+  OCR0B = 0;
 }
