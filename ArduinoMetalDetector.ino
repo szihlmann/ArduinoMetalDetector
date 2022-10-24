@@ -42,7 +42,7 @@ volatile unsigned long timer1_micros = 0;
 volatile uint8_t TCNT1_overflowCount = 0;
 
 // Buffer for total elapsed time when measuring colpitts frequency
-long signalTimeDelta = 0;
+volatile uint32_t signalTimeDelta;
 
 // Create buzzer instance
 Buzzer buzzer = Buzzer(SPEAKER_PIN, LED_PIN);

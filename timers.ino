@@ -7,19 +7,20 @@
  */
 SIGNAL(TIMER0_COMPB_vect)
 {
+  static uint16_t previousInputCapture = 0;
+  static boolean skipCycle = false;
+  
   uint16_t inputCapture = ICR1; // Read most recent Input Capture of timer 1
   uint8_t TCNT0_buf = TCNT0; // Read current timer0 counter
   uint8_t timer_overflows = TCNT1_overflowCount; // Read timer 1 overflows
   
-  static uint16_t previousInputCapture = 0;
-  static boolean skipCycle = false;
   uint32_t elapsedTime;
   uint8_t dataAvailable = newData;
   
   TCNT0_overflowCount++; // Increment clock counter
 
   if (TCNT0_overflowCount < SIGNAL_CYCLES)
-    return; // End interrupt here
+    return; // End interrupt here, number of cycles not yet reached
 
   // Calculate total elapsed time using input capture
   // Ensure we didn't miss a colpitts-tick before we had the chance to read ICR1. 
@@ -74,10 +75,11 @@ void setup_timer0()
   // Reset counter
   TCNT0 = 0;
   
-  // Clear interrupt flags by setting TOV0 high
+  // Clear interrupt flags by setting OCF0B high
+  // OCF0B: Timer/Counter 0 Output Compare B Match Flag
   TIFR0 = (1 << OCF0B); 
 
-  // Enable timer Output Compare Match B Interrup (ie, ISR(TIMER0_COMPB_vect))
+  // Enable timer Output Compare Match B Interrupt (i.e., ISR(TIMER0_COMPB_vect))
   // Overflows every ~3.66 ms with 140 kHz input
   TIMSK0 = (1 << OCIE0B);
   OCR0B = 0;
@@ -101,7 +103,7 @@ void setup_timer1()
   // Clear interrupt flags by setting TOV1 high
   TIFR1 = (1 << TOV1); 
 
-  // Enable timer overflow interrupt (ie, ISR(TIMER1_OVF_VECT))
+  // Enable timer overflow interrupt (i.e., ISR(TIMER1_OVF_VECT))
   // Overflows every 4.096 ms
   TIMSK1 |= (1 << TOIE1);
 }
