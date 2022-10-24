@@ -1,10 +1,5 @@
 /*
- * Copyright (c) 2016 Evan Kale
- * Media: @EvanKale91
- * Email: EvanKale91@gmail.com
- * Website: www.ISeeDeadPixel.com
- *          www.evankale.blogspot.ca
- *          www.youtube.com/EvanKale91
+ * Copyright (c) 2022 S. Zihlmann
  *
  * This file is part of ArduinoMetalDetector.
  *
