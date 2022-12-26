@@ -1,2 +1,7 @@
 # Omitt text files
 *.txt
+
+# Omitt many of the KiCad files
+*.kicad_prl
+*fp-info-cache
+*.zip
